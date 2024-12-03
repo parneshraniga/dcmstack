@@ -17,7 +17,7 @@ from . import dcmstack
 from .dcmstack import (parse_and_group, stack_group, DicomOrdering,
                        default_group_keys)
 from .dcmmeta import NiftiWrapper
-from .utils import iteritems, ascii_letters
+from .utils import iteritems, ascii_letters, pdb_except_hook
 from . import extract
 from .info import __version__
 
@@ -146,6 +146,8 @@ def main(argv=sys.argv):
                           'regular expressions and exit.'))
 
     gen_opt = arg_parser.add_argument_group('General Options')
+    gen_opt.add_argument('--pdb', default=False, action='store_true',
+                         help=('Enter debugger on unhandled exceptions.'))
     gen_opt.add_argument('-v', '--verbose',  default=False, action='store_true',
                          help=('Print additional information.'))
     gen_opt.add_argument('--strict', default=False, action='store_true',
@@ -155,7 +157,11 @@ def main(argv=sys.argv):
                          help=('Show the version and exit.'))
 
     args = arg_parser.parse_args(argv[1:])
-
+    if args.pdb:
+        if sys.stderr.isatty():
+            sys.excepthook = pdb_except_hook
+        else:
+            print("Ignoring '--pdb' in non-interactive context")
     if args.version:
         print(__version__)
         return 0
